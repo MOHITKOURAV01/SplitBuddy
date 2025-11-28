@@ -21,6 +21,8 @@ export const GroupProvider = ({ children }) => {
       members: group.members || [],
       expenses: [],
       totalExpenses: 0,
+      isSettled: false,
+      settledAt: null,
       createdAt: new Date().toISOString(),
     };
     setGroups((prev) => [newGroup, ...prev]);
@@ -125,6 +127,20 @@ export const GroupProvider = ({ children }) => {
     return true;
   };
 
+  const settleGroup = (groupId) => {
+    setGroups((prev) =>
+      prev.map((group) =>
+        group.id === groupId
+          ? {
+            ...group,
+            isSettled: true,
+            settledAt: new Date().toISOString(),
+          }
+          : group
+      )
+    );
+  };
+
   const value = {
     groups,
     addGroup,
@@ -135,6 +151,7 @@ export const GroupProvider = ({ children }) => {
     addMember,
     updateMember,
     deleteMember,
+    settleGroup,
   };
 
   return (
