@@ -63,6 +63,69 @@ export const GroupProvider = ({ children }) => {
     );
   };
 
+  // Member management functions
+  const addMember = (groupId, memberName) => {
+    if (!memberName.trim()) return null;
+
+    const newMember = {
+      id: Date.now().toString(),
+      name: memberName.trim(),
+      addedAt: new Date().toISOString(),
+    };
+
+    setGroups((prev) =>
+      prev.map((group) => {
+        if (group.id === groupId) {
+          return {
+            ...group,
+            members: [...group.members, newMember],
+          };
+        }
+        return group;
+      })
+    );
+
+    return newMember;
+  };
+
+  const updateMember = (groupId, memberId, newName) => {
+    if (!newName.trim()) return false;
+
+    setGroups((prev) =>
+      prev.map((group) => {
+        if (group.id === groupId) {
+          return {
+            ...group,
+            members: group.members.map((member) =>
+              member.id === memberId
+                ? { ...member, name: newName.trim() }
+                : member
+            ),
+          };
+        }
+        return group;
+      })
+    );
+
+    return true;
+  };
+
+  const deleteMember = (groupId, memberId) => {
+    setGroups((prev) =>
+      prev.map((group) => {
+        if (group.id === groupId) {
+          return {
+            ...group,
+            members: group.members.filter((member) => member.id !== memberId),
+          };
+        }
+        return group;
+      })
+    );
+
+    return true;
+  };
+
   const value = {
     groups,
     addGroup,
@@ -70,6 +133,9 @@ export const GroupProvider = ({ children }) => {
     deleteGroup,
     getGroup,
     addExpenseToGroup,
+    addMember,
+    updateMember,
+    deleteMember,
   };
 
   return (
