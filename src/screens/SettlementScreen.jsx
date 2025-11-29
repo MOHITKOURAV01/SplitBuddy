@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.oldReceipt,
   },
   scrollContent: {
-    padding: theme.spacing.settlementPadding,
+    padding: 24,
     paddingBottom: 100,
   },
   title: {
