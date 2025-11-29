@@ -158,9 +158,9 @@ export default function AddExpenseScreen({ navigation, route }) {
       );
       const totalAmount = parseFloat(amount);
       if (Math.abs(totalSplit - totalAmount) > 0.05) {
-        newErrors.customSplits = `Total split ($${totalSplit.toFixed(
+        newErrors.customSplits = `Total split (₹${totalSplit.toFixed(
           2
-        )}) must match expense amount ($${totalAmount.toFixed(2)})`;
+        )}) must match expense amount (₹${totalAmount.toFixed(2)})`;
       }
     }
 
@@ -177,19 +177,21 @@ export default function AddExpenseScreen({ navigation, route }) {
 
     try {
       const expenseData = {
-        title: isPayment ? "Payment" : title.trim(),
+        description: isPayment ? "Payment" : title.trim(),
         amount: parseFloat(amount),
         payer,
-        sharedMembers,
-        splits: splitMode === "unequal" ? customSplits : null,
+        splitType: splitMode === "unequal" ? "unequal" : "equal",
+        shares: splitMode === "unequal" ?
+          Object.entries(customSplits).map(([user, amount]) => ({ user, amount: parseFloat(amount) })) :
+          sharedMembers.map(id => ({ user: id, amount: parseFloat(amount) / sharedMembers.length })),
         receiptUri,
         groupId,
         isPayment,
       };
 
-      const createdExpense = await createExpense(expenseData);
+      // const createdExpense = await createExpense(expenseData); // Removed mock service call
 
-      addExpenseToGroup(groupId, createdExpense);
+      await addExpenseToGroup(groupId, expenseData);
 
       Alert.alert("Success", "Expense added successfully!", [
         {

@@ -52,7 +52,7 @@ export default function ArchiveScreen({ navigation }) {
           <View style={styles.statItem}>
             <CurrencyDollar size={20} color={theme.colors.warmAsh} />
             <Text style={[styles.statValue, { color: theme.colors.tomatoRed }]}>
-              ${item.totalExpenses.toFixed(0)}
+              ₹{item.totalExpenses.toFixed(0)}
             </Text>
             <Text style={styles.statLabel}>Total</Text>
           </View>

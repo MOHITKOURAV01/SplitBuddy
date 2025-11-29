@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import client from "../api/client";
 
 const AuthContext = createContext();
 
@@ -21,12 +22,17 @@ export const AuthProvider = ({ children }) => {
 
     const loadUser = async () => {
         try {
+            const token = await AsyncStorage.getItem("@splitbuddy_token");
             const storedUser = await AsyncStorage.getItem("@splitbuddy_user");
-            if (storedUser) {
+
+            if (token && storedUser) {
                 setUser(JSON.parse(storedUser));
+                // Optionally verify token validity with backend here
+                // await client.get('/auth/me');
             }
         } catch (error) {
             console.error("Failed to load user", error);
+            await logout();
         } finally {
             setIsLoading(false);
         }
@@ -34,62 +40,53 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            // In a real app, verify against API. Here we verify against stored users.
-            const storedUsersJson = await AsyncStorage.getItem("@splitbuddy_users_db");
-            const storedUsers = storedUsersJson ? JSON.parse(storedUsersJson) : [];
+            const { data } = await client.post("/auth/login", { email, password });
 
-            const foundUser = storedUsers.find(
-                (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-            );
-
-            if (foundUser) {
-                const userSession = {
-                    id: foundUser.id,
-                    name: foundUser.name,
-                    email: foundUser.email,
-                };
-                await AsyncStorage.setItem("@splitbuddy_user", JSON.stringify(userSession));
-                setUser(userSession);
-                return { success: true };
-            } else {
-                return { success: false, error: "Invalid email or password" };
-            }
-        } catch (error) {
-            return { success: false, error: error.message };
-        }
-    };
-
-    const register = async (name, email, password) => {
-        try {
-            const storedUsersJson = await AsyncStorage.getItem("@splitbuddy_users_db");
-            const storedUsers = storedUsersJson ? JSON.parse(storedUsersJson) : [];
-
-            if (storedUsers.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-                return { success: false, error: "Email already exists" };
-            }
-
-            const newUser = {
-                id: Date.now().toString(),
-                name,
-                email,
-                password, // In a real app, NEVER store plain text passwords
-            };
-
-            const updatedUsers = [...storedUsers, newUser];
-            await AsyncStorage.setItem("@splitbuddy_users_db", JSON.stringify(updatedUsers));
-
-            // Auto login
             const userSession = {
-                id: newUser.id,
-                name: newUser.name,
-                email: newUser.email,
+                id: data._id,
+                name: data.name,
+                email: data.email,
             };
+
+            await AsyncStorage.setItem("@splitbuddy_token", data.token);
             await AsyncStorage.setItem("@splitbuddy_user", JSON.stringify(userSession));
             setUser(userSession);
 
             return { success: true };
         } catch (error) {
-            return { success: false, error: error.message };
+            console.log("Login error:", error.response?.data || error.message);
+            return {
+                success: false,
+                error: error.response?.data?.message || "Login failed",
+            };
+        }
+    };
+
+    const register = async (name, email, password) => {
+        try {
+            const { data } = await client.post("/auth/register", {
+                name,
+                email,
+                password,
+            });
+
+            const userSession = {
+                id: data._id,
+                name: data.name,
+                email: data.email,
+            };
+
+            await AsyncStorage.setItem("@splitbuddy_token", data.token);
+            await AsyncStorage.setItem("@splitbuddy_user", JSON.stringify(userSession));
+            setUser(userSession);
+
+            return { success: true };
+        } catch (error) {
+            console.log("Register error:", error.response?.data || error.message);
+            return {
+                success: false,
+                error: error.response?.data?.message || "Registration failed",
+            };
         }
     };
 
@@ -110,6 +107,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
+            await AsyncStorage.removeItem("@splitbuddy_token");
             await AsyncStorage.removeItem("@splitbuddy_user");
             setUser(null);
         } catch (error) {

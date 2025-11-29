@@ -59,7 +59,7 @@ export default function SettlementScreen({ navigation, route }) {
           style: "destructive",
           onPress: () => {
             settleGroup(groupId);
-            navigation.goBack();
+            navigation.popToTop();
           },
         },
       ]
@@ -69,20 +69,17 @@ export default function SettlementScreen({ navigation, route }) {
   const handleMarkAsPaid = async (settlement) => {
     try {
       const expenseData = {
-        title: "Settlement",
+        description: "Settlement",
         amount: settlement.amount,
         payer: settlement.from,
-        sharedMembers: [settlement.to],
+        shares: [{ user: settlement.to, amount: settlement.amount }],
+        splitType: 'unequal', // Or 'shares' depending on backend logic, but unequal with explicit shares works
         groupId,
         isPayment: true,
       };
 
-      const createdExpense = await createExpense(expenseData);
-      // We need to access addExpenseToGroup from context
-      // But wait, useGroups returns it. Let's make sure we destructured it.
-      // Yes, we did: const { getGroup, settleGroup } = useGroups();
-      // Wait, we need addExpenseToGroup too.
-      addExpenseToGroup(groupId, createdExpense);
+      // const createdExpense = await createExpense(expenseData); // Removed mock
+      await addExpenseToGroup(groupId, expenseData);
 
       Alert.alert("Success", "Payment recorded!");
     } catch (error) {
@@ -137,19 +134,19 @@ export default function SettlementScreen({ navigation, route }) {
                     ]}
                   >
                     {isPositive
-                      ? `+$${balance.toFixed(0)}`
+                      ? `+₹${balance.toFixed(0)}`
                       : isNegative
-                        ? `-$${Math.abs(balance).toFixed(0)}`
+                        ? `-₹${Math.abs(balance).toFixed(0)}`
                         : "Even"}
                   </Text>
                 </View>
 
                 <View style={styles.memberDetails}>
                   <Text style={styles.detailText}>
-                    Paid: ${summary.totalPaid.toFixed(0)}
+                    Paid: ₹{summary.totalPaid.toFixed(0)}
                   </Text>
                   <Text style={styles.detailText}>
-                    Total Owed: ${summary.totalOwed.toFixed(0)}
+                    Total Owed: ₹{summary.totalOwed.toFixed(0)}
                   </Text>
                 </View>
 
@@ -178,9 +175,9 @@ export default function SettlementScreen({ navigation, route }) {
                     ]}
                   >
                     {isPositive
-                      ? `Should Receive $${balance.toFixed(2)}`
+                      ? `Should Receive ₹${balance.toFixed(2)}`
                       : isNegative
-                        ? `Owes $${Math.abs(balance).toFixed(2)}`
+                        ? `Owes ₹${Math.abs(balance).toFixed(2)}`
                         : "Settled"}
                   </Text>
                 </View>
@@ -201,7 +198,7 @@ export default function SettlementScreen({ navigation, route }) {
               <CrumpledCard key={index} style={styles.settlementCard}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.amountText}>
-                    ${settlement.amount.toFixed(0)}
+                    ₹{settlement.amount.toFixed(0)}
                   </Text>
                 </View>
 

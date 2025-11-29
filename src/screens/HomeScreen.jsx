@@ -45,12 +45,12 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.statsContainer}>
           <CrumpledCard style={styles.statCard}>
-            <Text style={styles.statValue}>{groups.length}</Text>
+            <Text style={styles.statValue}>{activeGroups.length}</Text>
             <Text style={styles.statLabel}>Active Trips</Text>
           </CrumpledCard>
           <CrumpledCard style={styles.statCard}>
             <Text style={[styles.statValue, { color: theme.colors.tomatoRed }]}>
-              ${totalBalance.toFixed(0)}
+              ₹{totalBalance.toFixed(0)}
             </Text>
             <Text style={styles.statLabel}>Total Spent</Text>
           </CrumpledCard>
@@ -89,7 +89,7 @@ export default function HomeScreen({ navigation }) {
                   </View>
                   <View style={styles.amountContainer}>
                     <Text style={styles.activityAmount}>
-                      ${group.totalExpenses.toFixed(0)}
+                      ₹{group.totalExpenses.toFixed(0)}
                     </Text>
                     <ArrowRight size={20} color={theme.colors.burntInk} />
                   </View>

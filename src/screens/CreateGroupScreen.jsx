@@ -8,39 +8,72 @@ import {
   Platform,
   StyleSheet,
   Pressable,
+  FlatList,
+  ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGroups } from "../context/GroupContext";
 import { theme } from "../styles/theme";
 import { LucaButton } from "../components/ui/LucaButton";
 import { CrumpledCard } from "../components/ui/CrumpledCard";
-import { Trash, Plus } from "phosphor-react-native";
+import { Trash, Plus, MagnifyingGlass } from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import client from "../api/client";
 
 export default function CreateGroupScreen({ navigation }) {
   const { addGroup } = useGroups();
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [members, setMembers] = useState([]);
-  const [memberName, setMemberName] = useState("");
   const insets = useSafeAreaInsets();
 
-  const handleAddMember = () => {
-    if (memberName.trim()) {
-      const newMember = {
-        id: Date.now().toString(),
-        name: memberName.trim(),
-      };
-      setMembers([...members, newMember]);
-      setMemberName("");
+  // Search State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Debounced Search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length > 1) {
+        setIsSearching(true);
+        try {
+          const { data } = await client.get(`/auth/search?q=${searchQuery}`);
+          setSearchResults(data);
+        } catch (error) {
+          console.error("Search failed", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const handleAddMember = (user) => {
+    if (members.some((m) => m.id === user._id)) {
+      Alert.alert("Already added", `${user.name} is already in the crew.`);
+      return;
     }
+
+    const newMember = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    };
+    setMembers([...members, newMember]);
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   const handleRemoveMember = (memberId) => {
     setMembers(members.filter((member) => member.id !== memberId));
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     if (!groupName.trim()) {
       Alert.alert("Error", "Please enter a group name");
       return;
@@ -51,20 +84,24 @@ export default function CreateGroupScreen({ navigation }) {
       return;
     }
 
-    const newGroup = addGroup({
-      name: groupName.trim(),
-      description: description.trim(),
-      members: members,
-    });
+    try {
+      const newGroup = await addGroup({
+        name: groupName.trim(),
+        description: description.trim(),
+        members: members,
+      });
 
-    Alert.alert("Success", "Trip created successfully!", [
-      {
-        text: "Let's Go",
-        onPress: () => {
-          navigation.navigate("GroupDetails", { groupId: newGroup.id });
+      Alert.alert("Success", "Trip created successfully!", [
+        {
+          text: "Let's Go",
+          onPress: () => {
+            navigation.navigate("GroupDetails", { groupId: newGroup.id });
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (error) {
+      Alert.alert("Error", "Failed to create trip. Please try again.");
+    }
   };
 
   return (
@@ -110,19 +147,45 @@ export default function CreateGroupScreen({ navigation }) {
 
         <View style={styles.formSection}>
           <Text style={styles.label}>The Crew</Text>
-          <CrumpledCard style={styles.addMemberCard}>
-            <TextInput
-              placeholder="Add a victim..."
-              style={styles.memberInput}
-              value={memberName}
-              onChangeText={setMemberName}
-              onSubmitEditing={handleAddMember}
-              returnKeyType="done"
-              placeholderTextColor={theme.colors.warmAsh}
-            />
-            <Pressable onPress={handleAddMember} style={styles.addIcon}>
-              <Plus size={24} color={theme.colors.tomatoRed} weight="bold" />
-            </Pressable>
+          <CrumpledCard style={styles.searchCard}>
+            <View style={styles.searchContainer}>
+              <MagnifyingGlass size={20} color={theme.colors.warmAsh} />
+              <TextInput
+                placeholder="Search by name or email..."
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor={theme.colors.warmAsh}
+                autoCapitalize="none"
+              />
+            </View>
+
+            {isSearching && (
+              <ActivityIndicator size="small" color={theme.colors.tomatoRed} style={{ marginVertical: 8 }} />
+            )}
+
+            {searchResults.length > 0 && (
+              <View style={styles.searchResultsList}>
+                {searchResults.map((user) => (
+                  <Pressable
+                    key={user._id}
+                    style={styles.searchResultItem}
+                    onPress={() => handleAddMember(user)}
+                  >
+                    <View style={styles.resultAvatar}>
+                      <Text style={styles.resultAvatarText}>
+                        {user.name.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.resultName}>{user.name}</Text>
+                      <Text style={styles.resultEmail}>{user.email}</Text>
+                    </View>
+                    <Plus size={20} color={theme.colors.oliveGreen} />
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </CrumpledCard>
 
           <View style={styles.membersList}>
@@ -185,7 +248,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   inputCard: {
-    padding: 0, // Reset padding for input container
+    padding: 0,
     backgroundColor: theme.colors.white,
   },
   input: {
@@ -198,22 +261,56 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: "top",
   },
-  addMemberCard: {
-    padding: 0,
+  searchCard: {
+    padding: 16,
     backgroundColor: theme.colors.white,
+  },
+  searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingRight: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.warmAsh,
+    paddingBottom: 8,
   },
-  memberInput: {
+  searchInput: {
     ...theme.typography.body,
     flex: 1,
-    padding: 16,
+    marginLeft: 8,
     color: theme.colors.burntInk,
-    minHeight: 56,
   },
-  addIcon: {
-    padding: 8,
+  searchResultsList: {
+    marginTop: 12,
+    maxHeight: 200,
+  },
+  searchResultItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.05)",
+  },
+  resultAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.oliveGreen,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  resultAvatarText: {
+    ...theme.typography.body,
+    color: theme.colors.white,
+    fontWeight: "bold",
+  },
+  resultName: {
+    ...theme.typography.body,
+    fontFamily: "Syne_700Bold",
+    color: theme.colors.burntInk,
+  },
+  resultEmail: {
+    ...theme.typography.caption,
+    color: theme.colors.warmAsh,
   },
   membersList: {
     flexDirection: "row",

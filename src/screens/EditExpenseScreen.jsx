@@ -144,8 +144,7 @@ export default function EditExpenseScreen({ navigation, route }) {
         receiptUri,
       };
 
-      await updateExpense(expenseId, expenseData);
-      updateExpenseInGroup(groupId, expenseId, expenseData);
+      await updateExpenseInGroup(groupId, expenseId, expenseData);
 
       Alert.alert("Success", "Expense updated successfully!", [
         {
@@ -175,8 +174,7 @@ export default function EditExpenseScreen({ navigation, route }) {
           onPress: async () => {
             setIsLoading(true);
             try {
-              await deleteExpense(expenseId);
-              deleteExpenseFromGroup(groupId, expenseId);
+              await deleteExpenseFromGroup(groupId, expenseId);
 
               Alert.alert("Deleted", "Expense has been deleted", [
                 {

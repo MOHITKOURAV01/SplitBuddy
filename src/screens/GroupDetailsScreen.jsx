@@ -8,8 +8,10 @@ import {
   StyleSheet,
   Pressable,
   StatusBar,
+  ActivityIndicator,
+  FlatList,
 } from "react-native";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useGroups } from "../context/GroupContext";
 import {
   calculateBalances,
@@ -27,8 +29,10 @@ import {
   Plus,
   ChartBar,
   Money,
+  MagnifyingGlass,
 } from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import client from "../api/client";
 
 export default function GroupDetailsScreen({ navigation, route }) {
   const { groupId } = route.params || {};
@@ -38,9 +42,13 @@ export default function GroupDetailsScreen({ navigation, route }) {
 
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [newMemberName, setNewMemberName] = useState("");
   const [editingMember, setEditingMember] = useState(null);
   const [editMemberName, setEditMemberName] = useState("");
+
+  // Search State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (groupId) {
@@ -77,17 +85,50 @@ export default function GroupDetailsScreen({ navigation, route }) {
     }
   };
 
-  const handleAddMember = () => {
-    if (!newMemberName.trim()) {
-      Alert.alert("Oops!", "Please enter a member name");
-      return;
-    }
+  // Debounced Search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length > 1) {
+        setIsSearching(true);
+        try {
+          const { data } = await client.get(`/auth/search?q=${searchQuery}`);
+          setSearchResults(data);
+        } catch (error) {
+          console.error("Search failed", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
 
-    const member = addMember(groupId, newMemberName);
-    if (member) {
-      setNewMemberName("");
-      setAddModalVisible(false);
-      refreshGroup();
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const handleInviteMember = async (user) => {
+    try {
+      // In a real app, we'd call the API:
+      // await client.post(`/groups/${groupId}/invite`, { email: user.email });
+      // For now, since we are mixing local/backend, we'll simulate the invite by adding them locally
+      // but using their real name from the search result.
+
+      // Check if already in group
+      if (group.members.some((m) => m.name === user.name)) {
+        Alert.alert("Already here", `${user.name} is already in the squad.`);
+        return;
+      }
+
+      const member = addMember(groupId, user.name); // Using local context for now to keep UI working
+      if (member) {
+        setSearchQuery("");
+        setSearchResults([]);
+        setAddModalVisible(false);
+        refreshGroup();
+        Alert.alert("Success", `Invited ${user.name} to the chaos!`);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to invite user");
     }
   };
 
@@ -258,13 +299,13 @@ export default function GroupDetailsScreen({ navigation, route }) {
                   <CrumpledCard style={styles.expenseCard}>
                     <View style={styles.expenseRow}>
                       <View style={styles.expenseInfo}>
-                        <Text style={styles.expenseTitle}>{expense.title}</Text>
+                        <Text style={styles.expenseTitle}>{expense.description || expense.title}</Text>
                         <Text style={styles.expensePayer}>
                           Paid by {payerName}
                         </Text>
                       </View>
                       <Text style={styles.expenseAmount}>
-                        ${parseFloat(expense.amount).toFixed(0)}
+                        ₹{parseFloat(expense.amount).toFixed(0)}
                       </Text>
                     </View>
                   </CrumpledCard>
@@ -295,7 +336,7 @@ export default function GroupDetailsScreen({ navigation, route }) {
         </View>
       </ScrollView>
 
-      {/* Add Member Modal */}
+      {/* Add Member Modal (Search) */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -304,26 +345,62 @@ export default function GroupDetailsScreen({ navigation, route }) {
       >
         <View style={styles.modalOverlay}>
           <CrumpledCard style={styles.modalContent}>
-            <Text style={styles.modalTitle}>New Victim</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Name (e.g. Luca)"
-              placeholderTextColor={theme.colors.warmAsh}
-              value={newMemberName}
-              onChangeText={setNewMemberName}
-              autoFocus
+            <Text style={styles.modalTitle}>Find a Victim</Text>
+            <View style={styles.searchContainer}>
+              <MagnifyingGlass size={20} color={theme.colors.warmAsh} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by name or email..."
+                placeholderTextColor={theme.colors.warmAsh}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus
+                autoCapitalize="none"
+              />
+            </View>
+
+            {isSearching && (
+              <ActivityIndicator
+                size="small"
+                color={theme.colors.tomatoRed}
+                style={{ marginVertical: 10 }}
+              />
+            )}
+
+            <FlatList
+              data={searchResults}
+              keyExtractor={(item) => item._id}
+              style={{ maxHeight: 200 }}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.searchResultItem}
+                  onPress={() => handleInviteMember(item)}
+                >
+                  <View style={styles.resultAvatar}>
+                    <Text style={styles.resultAvatarText}>
+                      {item.name.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.resultName}>{item.name}</Text>
+                    <Text style={styles.resultEmail}>{item.email}</Text>
+                  </View>
+                  <Plus size={20} color={theme.colors.oliveGreen} />
+                </Pressable>
+              )}
+              ListEmptyComponent={
+                searchQuery.length > 1 && !isSearching ? (
+                  <Text style={styles.noResultsText}>No one found. Sad.</Text>
+                ) : null
+              }
             />
+
             <View style={styles.modalActions}>
               <LucaButton
                 title="Cancel"
                 variant="secondary"
                 onPress={() => setAddModalVisible(false)}
-                style={{ flex: 1, marginRight: 8 }}
-              />
-              <LucaButton
-                title="Add"
-                onPress={handleAddMember}
-                style={{ flex: 1, marginLeft: 8 }}
+                style={{ flex: 1 }}
               />
             </View>
           </CrumpledCard>
@@ -529,6 +606,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: theme.colors.oldReceipt,
+    maxHeight: "80%",
   },
   modalTitle: {
     ...theme.typography.title1,
@@ -547,11 +625,65 @@ const styles = StyleSheet.create({
   modalActions: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 16,
   },
   errorText: {
     ...theme.typography.title2,
     textAlign: "center",
     marginTop: 40,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: theme.colors.burntInk,
+    marginBottom: 16,
+    paddingBottom: 8,
+  },
+  searchInput: {
+    ...theme.typography.body,
+    flex: 1,
+    marginLeft: 8,
+    color: theme.colors.burntInk,
+  },
+  searchResultItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: theme.colors.white,
+    marginBottom: 8,
+    borderRadius: theme.radii.card,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+  },
+  resultAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.oliveGreen,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  resultAvatarText: {
+    ...theme.typography.body,
+    color: theme.colors.white,
+    fontWeight: "bold",
+  },
+  resultName: {
+    ...theme.typography.body,
+    fontFamily: "Syne_700Bold",
+    color: theme.colors.burntInk,
+  },
+  resultEmail: {
+    ...theme.typography.caption,
+    color: theme.colors.warmAsh,
+  },
+  noResultsText: {
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
+    textAlign: "center",
+    marginTop: 16,
   },
 });
 

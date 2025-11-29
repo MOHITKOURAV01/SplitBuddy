@@ -26,8 +26,8 @@ export default function GroupsScreen({ navigation }) {
       <CrumpledCard style={styles.tripCard}>
         <View style={styles.tripHeader}>
           <Text style={styles.tripName}>{item.name}</Text>
-          <Text style={styles.tripAmount}>
-            ${item.totalExpenses.toFixed(0)}
+          <Text style={styles.totalDebt}>
+            ₹{totalDebt.toFixed(0)}
           </Text>
         </View>
         <View style={styles.tripDetails}>
@@ -65,7 +65,7 @@ export default function GroupsScreen({ navigation }) {
         </CrumpledCard>
         <CrumpledCard style={styles.statCard}>
           <Text style={[styles.statValue, { color: theme.colors.tomatoRed }]}>
-            ${totalDebt.toFixed(0)}
+            ₹{totalDebt.toFixed(0)}
           </Text>
           <Text style={styles.statLabel}>Total Debt</Text>
         </CrumpledCard>
