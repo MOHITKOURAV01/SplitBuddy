@@ -45,6 +45,7 @@ const addExpense = async (req, res) => {
 
     // Emit socket event
     const io = req.app.get("io");
+    console.log(`Emitting expense_added to group: ${groupId}`);
     io.to(groupId).emit("expense_added", expense);
 
     res.status(201).json(expense);
@@ -86,6 +87,11 @@ const updateExpense = async (req, res) => {
         { new: true }
     );
 
+    // Emit socket event
+    const io = req.app.get("io");
+    console.log(`Emitting expense_updated to group: ${expense.group}`);
+    io.to(expense.group.toString()).emit("expense_updated", updatedExpense);
+
     res.json(updatedExpense);
 };
 
@@ -109,6 +115,11 @@ const deleteExpense = async (req, res) => {
     });
 
     await expense.deleteOne();
+
+    // Emit socket event
+    const io = req.app.get("io");
+    console.log(`Emitting expense_deleted to group: ${expense.group}`);
+    io.to(expense.group.toString()).emit("expense_deleted", expense._id);
 
     res.json({ message: "Expense removed" });
 };

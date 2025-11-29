@@ -47,11 +47,13 @@ const createGroup = async (req, res) => {
     const io = req.app.get("io");
 
     // Notify creator (so other devices update)
+    console.log(`Emitting added_to_group to creator: ${req.user.id}`);
     io.to(req.user.id).emit("added_to_group", group);
 
     if (members && Array.isArray(members)) {
         members.forEach(member => {
             if (member.id !== req.user.id) {
+                console.log(`Emitting added_to_group to member: ${member.id}`);
                 io.to(member.id).emit("added_to_group", group);
             }
         });
@@ -142,10 +144,10 @@ const inviteMember = async (req, res) => {
         relatedModel: "Group",
     });
 
-    // Emit socket event if user is online
+    // Emit socket event
     const io = req.app.get("io");
-    // In a real app, we'd map userId to socketId. For now, we broadcast or rely on client polling/room logic
-    // io.to(userToInvite.id).emit("notification", { ... });
+    console.log(`Emitting added_to_group (invite) to user: ${userToInvite.id}`);
+    io.to(userToInvite.id).emit("added_to_group", group);
 
     res.json({ message: "Invitation sent" });
 };
@@ -210,6 +212,7 @@ const settleGroup = async (req, res) => {
 
     // Emit socket event
     const io = req.app.get("io");
+    console.log(`Emitting group_settled to group: ${req.params.id}`);
     io.to(req.params.id).emit("group_settled", group);
 
     res.json({ message: "Group settled and archived", group });
