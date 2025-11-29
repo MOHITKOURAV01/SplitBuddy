@@ -13,6 +13,7 @@ import {
   calculateSettlements,
   getMemberSummary,
 } from "../utils/settlementCalculations";
+import { createExpense } from "../api/expenseService";
 import { CrumpledCard } from "../components/ui/CrumpledCard";
 import { LucaButton } from "../components/ui/LucaButton";
 import { PulseIcon } from "../components/ui/PulseIcon";
@@ -20,7 +21,7 @@ import { ArrowRight, CheckCircle, Sparkle } from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SettlementScreen({ navigation, route }) {
-  const { getGroup, settleGroup } = useGroups();
+  const { getGroup, settleGroup, addExpenseToGroup } = useGroups();
   const { groupId } = route.params || {};
   const group = getGroup(groupId);
   const insets = useSafeAreaInsets();
@@ -63,6 +64,31 @@ export default function SettlementScreen({ navigation, route }) {
         },
       ]
     );
+  };
+
+  const handleMarkAsPaid = async (settlement) => {
+    try {
+      const expenseData = {
+        title: "Settlement",
+        amount: settlement.amount,
+        payer: settlement.from,
+        sharedMembers: [settlement.to],
+        groupId,
+        isPayment: true,
+      };
+
+      const createdExpense = await createExpense(expenseData);
+      // We need to access addExpenseToGroup from context
+      // But wait, useGroups returns it. Let's make sure we destructured it.
+      // Yes, we did: const { getGroup, settleGroup } = useGroups();
+      // Wait, we need addExpenseToGroup too.
+      addExpenseToGroup(groupId, createdExpense);
+
+      Alert.alert("Success", "Payment recorded!");
+    } catch (error) {
+      Alert.alert("Error", "Failed to record payment");
+      console.error(error);
+    }
   };
 
   const allSettled = settlements.length === 0 && expenses.length > 0;
@@ -123,7 +149,39 @@ export default function SettlementScreen({ navigation, route }) {
                     Paid: ₹{summary.totalPaid.toFixed(0)}
                   </Text>
                   <Text style={styles.detailText}>
-                    Share: ₹{summary.totalOwed.toFixed(0)}
+                    Total Owed: ₹{summary.totalOwed.toFixed(0)}
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.balanceBar,
+                    {
+                      backgroundColor: isPositive
+                        ? theme.colors.electricAmaro + "20" // 20% opacity
+                        : isNegative
+                          ? theme.colors.aperitivoSpritz + "20"
+                          : theme.colors.warmAsh + "20",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.balanceBarText,
+                      {
+                        color: isPositive
+                          ? theme.colors.electricAmaro
+                          : isNegative
+                            ? theme.colors.aperitivoSpritz
+                            : theme.colors.warmAsh,
+                      },
+                    ]}
+                  >
+                    {isPositive
+                      ? `Should Receive ₹${balance.toFixed(2)}`
+                      : isNegative
+                        ? `Owes ₹${Math.abs(balance).toFixed(2)}`
+                        : "Settled"}
                   </Text>
                 </View>
               </CrumpledCard>
@@ -141,18 +199,29 @@ export default function SettlementScreen({ navigation, route }) {
 
             {settlements.map((settlement, index) => (
               <CrumpledCard key={index} style={styles.settlementCard}>
-                <View style={styles.settlementRow}>
-                  <Text style={styles.fromText}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.amountText}>
+                    ₹{settlement.amount.toFixed(0)}
+                  </Text>
+                </View>
+
+                <View style={styles.namesContainer}>
+                  <Text style={styles.nameText}>
                     {getMemberName(settlement.from)}
                   </Text>
-                  <ArrowRight size={20} color={theme.colors.warmAsh} />
-                  <Text style={styles.toText}>
+                  <ArrowRight size={16} color={theme.colors.warmAsh} />
+                  <Text style={styles.nameText}>
                     {getMemberName(settlement.to)}
                   </Text>
                 </View>
-                <Text style={styles.amountText}>
-                  ₹{settlement.amount.toFixed(0)}
-                </Text>
+
+                <LucaButton
+                  title="Mark as Paid"
+                  variant="secondary"
+                  onPress={() => handleMarkAsPaid(settlement)}
+                  style={styles.markPaidButton}
+                  textStyle={styles.markPaidButtonText}
+                />
               </CrumpledCard>
             ))}
           </View>
@@ -268,29 +337,49 @@ const styles = StyleSheet.create({
   settlementCard: {
     marginBottom: 12,
     backgroundColor: theme.colors.white,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    padding: 16,
+    gap: 12,
   },
-  settlementRow: {
+  cardHeader: {
+    alignItems: "flex-end",
+  },
+  namesContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    flex: 1,
   },
-  fromText: {
+  nameText: {
     ...theme.typography.body,
     color: theme.colors.burntInk,
     fontFamily: "Syne_700Bold",
-  },
-  toText: {
-    ...theme.typography.body,
-    color: theme.colors.burntInk,
-    fontFamily: "Syne_700Bold",
+    fontSize: 22,
   },
   amountText: {
-    ...theme.typography.title1,
+    ...theme.typography.display,
+    fontSize: 24,
     color: theme.colors.aperitivoSpritz,
+  },
+  markPaidButton: {
+    height: 48,
+    borderRadius: 24,
+    width: "100%",
+    marginTop: 4,
+  },
+  markPaidButtonText: {
+    fontSize: 16,
+    color: theme.colors.electricAmaro,
+  },
+  balanceBar: {
+    marginTop: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  balanceBarText: {
+    ...theme.typography.title2,
+    fontSize: 14,
+    fontFamily: "Syne_700Bold",
   },
   celebrationContainer: {
     alignItems: "center",

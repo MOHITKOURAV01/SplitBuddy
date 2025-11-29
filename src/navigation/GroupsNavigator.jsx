@@ -1,5 +1,5 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { LucaHeader } from "../components/ui/LucaHeader";
+import { useTheme } from "../context/ThemeContext";
 
 import GroupsScreen from "../screens/GroupsScreen";
 import CreateGroupScreen from "../screens/CreateGroupScreen";
@@ -9,9 +9,13 @@ import EditExpenseScreen from "../screens/EditExpenseScreen";
 import SettlementScreen from "../screens/SettlementScreen";
 import ActivityLogScreen from "../screens/ActivityLogScreen";
 
+import LucaHeader from "../components/ui/LucaHeader";
+
 const Stack = createNativeStackNavigator();
 
 export default function GroupsNavigator() {
+  const { colors } = useTheme();
+
   const screenOptions = {
     header: (props) => <LucaHeader {...props} />,
   };

@@ -1,11 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useTheme } from "../../context/ThemeContext";
 import { CaretLeft } from "phosphor-react-native";
-import { theme } from "../../styles/theme";
-import ThemeToggleButton from "../ThemeToggleButton";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export const LucaHeader = ({ navigation, route, options, back }) => {
+export default function LucaHeader({ navigation, route, options, back }) {
+    const { colors } = useTheme();
     const insets = useSafeAreaInsets();
     const title = options.title || route.name;
 
@@ -13,58 +13,63 @@ export const LucaHeader = ({ navigation, route, options, back }) => {
         <View
             style={[
                 styles.container,
-                { paddingTop: insets.top + 10, height: 60 + insets.top },
+                {
+                    paddingTop: insets.top,
+                    backgroundColor: colors.white, // Clean white header
+                    height: 60 + insets.top,
+                },
             ]}
         >
-            <View style={styles.leftContainer}>
-                {back && (
-                    <Pressable onPress={navigation.goBack} style={styles.backButton}>
-                        <CaretLeft size={24} color={theme.colors.burntInk} />
-                    </Pressable>
+            <View style={styles.content}>
+                {back ? (
+                    <TouchableOpacity
+                        onPress={navigation.goBack}
+                        style={styles.backButton}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <CaretLeft size={24} color={colors.burntInk} weight="bold" />
+                    </TouchableOpacity>
+                ) : (
+                    <View style={styles.placeholder} />
                 )}
-            </View>
 
-            <View style={styles.centerContainer}>
-                <Text style={styles.title}>{title}</Text>
-            </View>
+                <Text style={[styles.title, { color: colors.burntInk }]}>
+                    {title}
+                </Text>
 
-            <View style={styles.rightContainer}>
-                <ThemeToggleButton />
+                {/* Empty view to balance the back button for center alignment */}
+                <View style={styles.placeholder} />
             </View>
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
+        borderBottomWidth: 1,
+        borderBottomColor: "#F0F0F0", // Subtle separator
+        justifyContent: "center",
+    },
+    content: {
+        flex: 1,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: theme.colors.oldReceipt,
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(0,0,0,0.05)",
         paddingHorizontal: 16,
-        paddingBottom: 10,
-    },
-    leftContainer: {
-        flex: 1,
-        alignItems: "flex-start",
-    },
-    centerContainer: {
-        flex: 2,
-        alignItems: "center",
-    },
-    rightContainer: {
-        flex: 1,
-        alignItems: "flex-end",
     },
     backButton: {
-        padding: 8,
-        marginLeft: -8,
+        width: 40,
+        height: 40,
+        justifyContent: "center",
+        alignItems: "flex-start",
     },
     title: {
-        ...theme.typography.title2,
-        color: theme.colors.burntInk,
+        fontFamily: "Syne_700Bold",
+        fontSize: 20,
         textAlign: "center",
+        flex: 1,
+    },
+    placeholder: {
+        width: 40,
     },
 });
