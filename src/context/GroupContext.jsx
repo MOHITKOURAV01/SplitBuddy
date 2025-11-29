@@ -16,58 +16,12 @@ export const useGroups = () => {
 };
 
 export const GroupProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [groups, setGroups] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [socket, setSocket] = useState(null);
 
-  // Initialize Socket
-  useEffect(() => {
-    if (user && user.id !== 'guest') {
-      const newSocket = io(SOCKET_URL);
-      setSocket(newSocket);
-
-      newSocket.on("connect", () => {
-        console.log("Socket connected:", newSocket.id);
-        // Join user-specific room for personal notifications (like being added to a group)
-        newSocket.emit("join_user_room", user.id);
-      });
-
-      // Listen for updates
-      newSocket.on("expense_added", (expense) => {
-        console.log("New expense received via socket:", expense);
-        // Refresh groups to get the latest data
-        // Optimization: We could just append to the specific group locally
-        loadGroups();
-      });
-
-      newSocket.on("group_settled", (group) => {
-        console.log("Group settled via socket:", group);
-        loadGroups();
-      });
-
-      return () => newSocket.disconnect();
-    }
-  }, [user]);
-
-  // Join group rooms when groups are loaded
-  useEffect(() => {
-    if (socket && groups.length > 0) {
-      groups.forEach(group => {
-        socket.emit("join_group", group.id);
-      });
-    }
-  }, [socket, groups]);
-
-  // Load groups when user changes
-  useEffect(() => {
-    if (user) {
-      loadGroups();
-    } else {
-      setGroups([]);
-      setIsLoaded(false);
-    }
-  }, [user]);
+  // ... (existing code)
 
   const loadGroups = async () => {
     try {
@@ -79,10 +33,7 @@ export const GroupProvider = ({ children }) => {
       }
 
       const { data } = await client.get("/groups");
-      // Backend returns groups with populated members. 
-      // We might need to map them to match frontend structure if needed, 
-      // but the schema seems compatible (members array, expenses array).
-      // Ensure expenses are initialized if missing
+      // ... (existing processing logic)
       const processedGroups = data.map(g => ({
         ...g,
         id: g._id, // Map _id to id for frontend compatibility
@@ -120,6 +71,10 @@ export const GroupProvider = ({ children }) => {
       setGroups(processedGroups);
     } catch (error) {
       console.error("Failed to load groups", error);
+      if (error.response && error.response.status === 401) {
+        console.log("Token expired or invalid, logging out...");
+        logout();
+      }
     } finally {
       setIsLoaded(true);
     }

@@ -43,8 +43,12 @@ const createGroup = async (req, res) => {
         }
     }
 
-    // Emit socket event to invited members
+    // Emit socket event to invited members AND creator (for multi-device sync)
     const io = req.app.get("io");
+
+    // Notify creator (so other devices update)
+    io.to(req.user.id).emit("added_to_group", group);
+
     if (members && Array.isArray(members)) {
         members.forEach(member => {
             if (member.id !== req.user.id) {
