@@ -31,7 +31,6 @@ export default function ActivityLogScreen() {
     if (!group) return [];
     const activities = [];
 
-    // 1. Group Created
     activities.push({
       id: `create-${group.id}`,
       type: "create",
@@ -40,7 +39,6 @@ export default function ActivityLogScreen() {
       timestamp: new Date(group.createdAt).getTime(),
     });
 
-    // 2. Members Added
     if (group.members) {
       group.members.forEach((member) => {
         if (member.addedAt) {
@@ -55,16 +53,13 @@ export default function ActivityLogScreen() {
       });
     }
 
-    // Helper to get member name
     const getMemberName = (id) => {
       const member = group.members.find((m) => m.id === id);
-      return member ? member.name : "A Mystery Guest"; // Creative fallback
+      return member ? member.name : "A Mystery Guest";
     };
 
-    // 3. Expenses & Payments
     if (group.expenses) {
       group.expenses.forEach((expense) => {
-        // Handle payer: could be object (populated) or ID
         let payerName = "A Mystery Guest";
         if (expense.payer && typeof expense.payer === 'object' && expense.payer.name) {
           payerName = expense.payer.name;
@@ -72,11 +67,9 @@ export default function ActivityLogScreen() {
           payerName = getMemberName(expense.payer);
         }
 
-        // Handle receiver/shared members
         let receiverName = "Everyone";
         const sharedList = expense.shares || expense.sharedMembers || [];
         if (sharedList.length > 0) {
-          // If shares (backend), it's array of { user: ID/Obj }. If sharedMembers (legacy), array of IDs.
           const firstShare = sharedList[0];
           const firstMemberId = firstShare.user ? (firstShare.user._id || firstShare.user) : firstShare;
           receiverName = getMemberName(firstMemberId);
@@ -93,11 +86,9 @@ export default function ActivityLogScreen() {
           timestamp: new Date(expense.createdAt).getTime(),
         });
 
-        // If updated (we'd need history for this, skipping for now as context doesn't track history deeply)
       });
     }
 
-    // 4. Group Settled
     if (group.isSettled && group.settledAt) {
       activities.push({
         id: `settle-${group.id}`,

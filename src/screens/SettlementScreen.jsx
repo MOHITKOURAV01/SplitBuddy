@@ -73,12 +73,11 @@ export default function SettlementScreen({ navigation, route }) {
         amount: settlement.amount,
         payer: settlement.from,
         shares: [{ user: settlement.to, amount: settlement.amount }],
-        splitType: 'unequal', // Or 'shares' depending on backend logic, but unequal with explicit shares works
+        splitType: 'unequal',
         groupId,
         isPayment: true,
       };
 
-      // const createdExpense = await createExpense(expenseData); // Removed mock
       await addExpenseToGroup(groupId, expenseData);
 
       Alert.alert("Success", "Payment recorded!");
@@ -107,7 +106,6 @@ export default function SettlementScreen({ navigation, route }) {
           </CrumpledCard>
         )}
 
-        {/* Member Balances */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Member Balances</Text>
 
@@ -155,7 +153,7 @@ export default function SettlementScreen({ navigation, route }) {
                     styles.balanceBar,
                     {
                       backgroundColor: isPositive
-                        ? theme.colors.oliveGreen + "20" // 20% opacity
+                        ? theme.colors.oliveGreen + "20"
                         : isNegative
                           ? theme.colors.tomatoRed + "20"
                           : theme.colors.warmAsh + "20",
@@ -186,7 +184,6 @@ export default function SettlementScreen({ navigation, route }) {
           })}
         </View>
 
-        {/* Settlement Suggestions */}
         {settlements.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Suggested Payments</Text>
@@ -245,7 +242,6 @@ export default function SettlementScreen({ navigation, route }) {
         )}
       </ScrollView>
 
-      {/* Settle Trip Button */}
       {!isSettled && expenses.length > 0 && (
         <View style={styles.footer}>
           <LucaButton

@@ -2,9 +2,6 @@ const Group = require("../models/Group");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 
-// @desc    Create a new group
-// @route   POST /api/groups
-// @access  Private
 const createGroup = async (req, res) => {
     const { name, description, members } = req.body;
 
@@ -16,7 +13,6 @@ const createGroup = async (req, res) => {
 
     if (members && Array.isArray(members)) {
         members.forEach(member => {
-            // Avoid adding creator twice if they are in the list
             if (member.id !== req.user.id) {
                 initialMembers.push({ user: member.id, status: "invited" });
             }
@@ -30,11 +26,8 @@ const createGroup = async (req, res) => {
         members: initialMembers,
     });
 
-    // Add group to user's groups list (creator)
     await User.findByIdAndUpdate(req.user.id, { $push: { groups: group._id } });
 
-    // Optionally add group to invited members' lists (or wait for them to join)
-    // For now, we'll add it so it shows up in their list immediately as 'invited'
     if (members && Array.isArray(members)) {
         for (const member of members) {
             if (member.id !== req.user.id) {
@@ -43,10 +36,8 @@ const createGroup = async (req, res) => {
         }
     }
 
-    // Emit socket event to invited members AND creator (for multi-device sync)
     const io = req.app.get("io");
 
-    // Notify creator (so other devices update)
     console.log(`Emitting added_to_group to creator: ${req.user.id}`);
     io.to(req.user.id).emit("added_to_group", group);
 
@@ -62,9 +53,7 @@ const createGroup = async (req, res) => {
     res.status(201).json(group);
 };
 
-// @desc    Get user's groups
-// @route   GET /api/groups
-// @access  Private
+
 const getGroups = async (req, res) => {
     const groups = await Group.find({ "members.user": req.user.id })
         .populate("members.user", "name email profilePic")
@@ -77,9 +66,7 @@ const getGroups = async (req, res) => {
     res.json(groups);
 };
 
-// @desc    Get group details
-// @route   GET /api/groups/:id
-// @access  Private
+
 const getGroup = async (req, res) => {
     const group = await Group.findById(req.params.id)
         .populate("members.user", "name email profilePic")
@@ -92,7 +79,6 @@ const getGroup = async (req, res) => {
         return res.status(404).json({ message: "Group not found" });
     }
 
-    // Check if user is a member
     const isMember = group.members.some(
         (member) => member.user._id.toString() === req.user.id
     );
@@ -104,9 +90,6 @@ const getGroup = async (req, res) => {
     res.json(group);
 };
 
-// @desc    Invite member to group
-// @route   POST /api/groups/:id/invite
-// @access  Private
 const inviteMember = async (req, res) => {
     const { email } = req.body;
     const group = await Group.findById(req.params.id);
@@ -121,7 +104,6 @@ const inviteMember = async (req, res) => {
         return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if already a member
     const isMember = group.members.some(
         (member) => member.user.toString() === userToInvite.id
     );
@@ -130,11 +112,9 @@ const inviteMember = async (req, res) => {
         return res.status(400).json({ message: "User is already a member" });
     }
 
-    // Add to group members with 'invited' status
     group.members.push({ user: userToInvite.id, status: "invited" });
     await group.save();
 
-    // Create notification
     await Notification.create({
         toUser: userToInvite.id,
         fromUser: req.user.id,
@@ -144,7 +124,6 @@ const inviteMember = async (req, res) => {
         relatedModel: "Group",
     });
 
-    // Emit socket event
     const io = req.app.get("io");
     console.log(`Emitting added_to_group (invite) to user: ${userToInvite.id}`);
     io.to(userToInvite.id).emit("added_to_group", group);
@@ -152,9 +131,7 @@ const inviteMember = async (req, res) => {
     res.json({ message: "Invitation sent" });
 };
 
-// @desc    Join group (Accept Invite)
-// @route   POST /api/groups/:id/join
-// @access  Private
+
 const joinGroup = async (req, res) => {
     const group = await Group.findById(req.params.id);
 
@@ -162,20 +139,17 @@ const joinGroup = async (req, res) => {
         return res.status(404).json({ message: "Group not found" });
     }
 
-    // Find member entry
     const memberIndex = group.members.findIndex(
         (member) => member.user.toString() === req.user.id
     );
 
     if (memberIndex === -1) {
-        // Allow joining public groups or via link if implemented, but for now strict invite
         return res.status(400).json({ message: "You have not been invited" });
     }
 
     group.members[memberIndex].status = "joined";
     await group.save();
 
-    // Add group to user's list
     await User.findByIdAndUpdate(req.user.id, {
         $addToSet: { groups: group._id },
     });
@@ -183,9 +157,6 @@ const joinGroup = async (req, res) => {
     res.json({ message: "Joined group successfully" });
 };
 
-// @desc    Settle group (Archive)
-// @route   POST /api/groups/:id/settle
-// @access  Private
 const settleGroup = async (req, res) => {
     const group = await Group.findById(req.params.id);
 
@@ -193,8 +164,7 @@ const settleGroup = async (req, res) => {
         return res.status(404).json({ message: "Group not found" });
     }
 
-    // Check authorization (only creator or any member?)
-    // Allow any member for now
+
     const isMember = group.members.some(
         (member) => member.user.toString() === req.user.id
     );
@@ -207,10 +177,6 @@ const settleGroup = async (req, res) => {
     group.settledAt = new Date();
     await group.save();
 
-    // Create notification/activity
-    // ...
-
-    // Emit socket event
     const io = req.app.get("io");
     console.log(`Emitting group_settled to group: ${req.params.id}`);
     io.to(req.params.id).emit("group_settled", group);

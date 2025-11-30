@@ -17,6 +17,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
         borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.02)", // Subtle border
+        borderColor: "rgba(0,0,0,0.02)",
     },
 });

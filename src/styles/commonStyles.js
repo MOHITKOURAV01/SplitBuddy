@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
 
-// Common Colors
 export const colors = {
   primary: "#007AFF",
   secondary: "#5856D6",
@@ -19,7 +18,6 @@ export const colors = {
   overlay: "rgba(0, 0, 0, 0.5)",
 };
 
-// Common Spacing
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -30,7 +28,6 @@ export const spacing = {
   xxxl: 32,
 };
 
-// Common Font Sizes
 export const fontSize = {
   xs: 12,
   sm: 14,
@@ -41,9 +38,7 @@ export const fontSize = {
   xxxl: 28,
 };
 
-// Common Styles
 export const commonStyles = StyleSheet.create({
-  // Container Styles
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -59,7 +54,6 @@ export const commonStyles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
-  // Card Styles
   card: {
     backgroundColor: colors.white,
     borderRadius: 12,
@@ -78,7 +72,6 @@ export const commonStyles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
 
-  // Button Styles
   primaryButton: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.xxxl,
@@ -132,7 +125,6 @@ export const commonStyles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // Text Styles
   title: {
     fontSize: fontSize.xxxl,
     fontWeight: "bold",
@@ -158,7 +150,6 @@ export const commonStyles = StyleSheet.create({
     color: colors.text,
   },
 
-  // Input Styles
   input: {
     backgroundColor: colors.white,
     borderWidth: 1,
@@ -173,7 +164,6 @@ export const commonStyles = StyleSheet.create({
     textAlignVertical: "top",
   },
 
-  // Section Styles
   section: {
     backgroundColor: colors.white,
     padding: spacing.xl,
@@ -191,7 +181,6 @@ export const commonStyles = StyleSheet.create({
     color: colors.text,
   },
 
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: colors.overlay,
@@ -223,7 +212,6 @@ export const commonStyles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // List Styles
   emptyContainer: {
     alignItems: "center",
     paddingHorizontal: 40,
@@ -246,7 +234,6 @@ export const commonStyles = StyleSheet.create({
     lineHeight: 22,
   },
 
-  // Header Styles
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -259,7 +246,6 @@ export const commonStyles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
 
-  // Avatar Styles
   avatar: {
     width: 40,
     height: 40,
@@ -274,7 +260,6 @@ export const commonStyles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // Badge Styles
   badge: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
@@ -287,14 +272,12 @@ export const commonStyles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // Divider
   divider: {
     height: 1,
     backgroundColor: colors.border,
     marginVertical: spacing.lg,
   },
 
-  // Shadow
   shadow: {
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },

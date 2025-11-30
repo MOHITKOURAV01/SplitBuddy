@@ -34,21 +34,17 @@ app.use("/api/settlements", require("./routes/settlementRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/groups/:groupId/activity", require("./routes/activityRoutes"));
 
-// Make io accessible in routes
 app.set("io", io);
 
-// Routes (Placeholder)
 app.get("/", (req, res) => {
     res.json({ message: "SplitBuddy API is running... Chaos is loading." });
 });
 
-// Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: "Something broke! It's chaos!" });
 });
 
-// Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

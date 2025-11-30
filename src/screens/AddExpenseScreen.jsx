@@ -52,7 +52,6 @@ export default function AddExpenseScreen({ navigation, route }) {
       let newMembers;
       if (prev.includes(memberId)) {
         newMembers = prev.filter((id) => id !== memberId);
-        // Remove from custom splits if deselected
         if (customSplits[memberId]) {
           const newSplits = { ...customSplits };
           delete newSplits[memberId];
@@ -89,7 +88,6 @@ export default function AddExpenseScreen({ navigation, route }) {
 
     sharedMembers.forEach((id, index) => {
       if (index === count - 1) {
-        // Last person gets the remainder to ensure exact total
         newSplits[id] = (total - currentSum).toFixed(2);
       } else {
         newSplits[id] = splitAmount;
@@ -189,7 +187,6 @@ export default function AddExpenseScreen({ navigation, route }) {
         isPayment,
       };
 
-      // const createdExpense = await createExpense(expenseData); // Removed mock service call
 
       await addExpenseToGroup(groupId, expenseData);
 

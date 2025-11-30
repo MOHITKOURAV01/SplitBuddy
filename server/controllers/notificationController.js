@@ -1,8 +1,5 @@
 const Notification = require("../models/Notification");
 
-// @desc    Get user notifications
-// @route   GET /api/notifications
-// @access  Private
 const getNotifications = async (req, res) => {
     const notifications = await Notification.find({ toUser: req.user.id })
         .sort({ createdAt: -1 })
@@ -11,9 +8,7 @@ const getNotifications = async (req, res) => {
     res.json(notifications);
 };
 
-// @desc    Mark notification as read
-// @route   PATCH /api/notifications/:id/read
-// @access  Private
+
 const markAsRead = async (req, res) => {
     const notification = await Notification.findById(req.params.id);
 

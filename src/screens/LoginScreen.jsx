@@ -40,7 +40,6 @@ export default function LoginScreen({ navigation }) {
         if (!result.success) {
             Alert.alert("Login Failed", result.error);
         }
-        // No need to navigate manually, RootNavigator handles it based on user state
     };
 
     const handleContinueWithoutLogin = async () => {

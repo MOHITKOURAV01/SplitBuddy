@@ -9,13 +9,11 @@ const seedData = async () => {
         await mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/splitbuddy");
         console.log("Connected to MongoDB...");
 
-        // Clear existing data
         await User.deleteMany({});
         await Group.deleteMany({});
         await Expense.deleteMany({});
         console.log("Cleared existing data...");
 
-        // Create Users
         const user1 = await User.create({
             name: "Mario",
             email: "mario@chaos.com",
@@ -36,7 +34,6 @@ const seedData = async () => {
 
         console.log("Users created...");
 
-        // Create Group
         const group = await Group.create({
             name: "Amalfi Coast 2024",
             description: "Pizza, Pasta, and Poor Financial Decisions",
@@ -48,7 +45,6 @@ const seedData = async () => {
             ],
         });
 
-        // Add group to users
         await User.updateMany(
             { _id: { $in: [user1._id, user2._id, user3._id] } },
             { $push: { groups: group._id } }
@@ -56,10 +52,9 @@ const seedData = async () => {
 
         console.log("Group created: Amalfi Coast 2024");
 
-        // Create Expense
         const expense = await Expense.create({
             description: "Welcome Spritz",
-            amount: 4500, // ₹4500
+            amount: 4500,
             currency: "INR",
             payer: user1._id,
             addedBy: user1._id,
@@ -72,7 +67,6 @@ const seedData = async () => {
             ],
         });
 
-        // Add expense to group
         group.expenses.push(expense._id);
         await group.save();
 

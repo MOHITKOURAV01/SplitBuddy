@@ -17,7 +17,7 @@ const ActivityLogSchema = new mongoose.Schema(
             required: true,
         },
         details: {
-            type: Object, // Flexible field for storing details like expense title, amount, etc.
+            type: Object,
         },
     },
     { timestamps: true }

@@ -15,7 +15,7 @@ export default function LucaHeader({ navigation, route, options, back }) {
                 styles.container,
                 {
                     paddingTop: insets.top,
-                    backgroundColor: colors.white, // Clean white header
+                    backgroundColor: colors.white,
                     height: 60 + insets.top,
                 },
             ]}
@@ -36,8 +36,6 @@ export default function LucaHeader({ navigation, route, options, back }) {
                 <Text style={[styles.title, { color: colors.burntInk }]}>
                     {title}
                 </Text>
-
-                {/* Empty view to balance the back button for center alignment */}
                 <View style={styles.placeholder} />
             </View>
         </View>
@@ -47,7 +45,7 @@ export default function LucaHeader({ navigation, route, options, back }) {
 const styles = StyleSheet.create({
     container: {
         borderBottomWidth: 1,
-        borderBottomColor: "#F0F0F0", // Subtle separator
+        borderBottomColor: "#F0F0F0",
         justifyContent: "center",
     },
     content: {

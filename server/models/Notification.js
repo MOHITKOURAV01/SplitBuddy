@@ -32,7 +32,7 @@ const NotificationSchema = new mongoose.Schema(
             default: false,
         },
         relatedId: {
-            type: mongoose.Schema.Types.ObjectId, // Could be Group, Expense, or Settlement ID
+            type: mongoose.Schema.Types.ObjectId,
         },
         relatedModel: {
             type: String,

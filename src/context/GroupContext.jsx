@@ -84,7 +84,6 @@ export const GroupProvider = ({ children }) => {
 
   const loadGroups = async () => {
     try {
-      // If guest, maybe load local? For now, assume backend only for logged in users
       if (user?.id === 'guest') {
         const storedGroups = await AsyncStorage.getItem(`@splitbuddy_groups_guest`);
         if (storedGroups) setGroups(JSON.parse(storedGroups));
@@ -92,10 +91,9 @@ export const GroupProvider = ({ children }) => {
       }
 
       const { data } = await client.get("/groups");
-      // ... (existing processing logic)
       const processedGroups = data.map(g => ({
         ...g,
-        id: g._id, // Map _id to id for frontend compatibility
+        id: g._id,
         expenses: (g.expenses || []).map(e => {
           const payerId = e.payer?._id || e.payer;
           const sharedMembers = (e.shares || []).map(s => s.user?._id || s.user);
@@ -109,7 +107,7 @@ export const GroupProvider = ({ children }) => {
 
           return {
             ...e,
-            id: e._id, // Map _id to id for frontend compatibility
+            id: e._id,
             payer: payerId,
             sharedMembers,
             splits
@@ -129,10 +127,11 @@ export const GroupProvider = ({ children }) => {
       }));
       setGroups(processedGroups);
     } catch (error) {
-      console.error("Failed to load groups", error);
       if (error.response && error.response.status === 401) {
         console.log("Token expired or invalid, logging out...");
         logout();
+      } else {
+        console.error("Failed to load groups", error);
       }
     } finally {
       setIsLoaded(true);
@@ -161,7 +160,7 @@ export const GroupProvider = ({ children }) => {
       const { data } = await client.post("/groups", {
         name: groupData.name,
         description: groupData.description,
-        members: groupData.members // Array of { id, name, email }
+        members: groupData.members
       });
 
       const newGroup = {
@@ -170,17 +169,11 @@ export const GroupProvider = ({ children }) => {
         expenses: [],
         totalExpenses: 0,
         members: data.members.map(m => {
-          // The backend returns the member objects. We need to match frontend structure.
-          // If the backend returns populated user objects in members, great. 
-          // If not (just IDs), we might need to rely on what we sent or refetch.
-          // The createGroup controller returns the group doc. 
-          // Mongoose might not populate members immediately unless we explicitly populate in response.
-          // For now, let's just reload groups to be safe and get full data.
           return m;
         })
       };
 
-      await loadGroups(); // Refresh to get populated data
+      await loadGroups();
       return newGroup;
     } catch (error) {
       console.error("Failed to create group", error);
@@ -189,21 +182,9 @@ export const GroupProvider = ({ children }) => {
   };
 
   const addMember = async (groupId, memberNameOrUser) => {
-    // If it's a string, it's a guest/local add (legacy). If object, it's a real user.
-    // Since we updated UI to send user object, we should handle that.
-    // But for backward compat with manual entry, check type.
 
-    // Real backend invite
     if (user?.id !== 'guest') {
       try {
-        // If memberNameOrUser is a string (manual entry), we can't invite via email unless we ask for email.
-        // But CreateGroupScreen now sends objects with email.
-        // GroupDetailsScreen "Add Member" also sends objects now.
-
-        // If we just have a name (legacy), we can't really invite. 
-        // We'll assume it's a user object if possible.
-
-        // Actually, GroupDetailsScreen sends the whole user object from search.
         const email = memberNameOrUser.email;
         if (email) {
           await client.post(`/groups/${groupId}/invite`, { email });
@@ -216,20 +197,16 @@ export const GroupProvider = ({ children }) => {
       }
     }
 
-    // ... (Keep local logic for guest mode if needed, or just return)
+
   };
 
-  // ... (Other functions like updateGroup, deleteGroup need similar updates or can be left as TODO if not critical for this step)
-  // For now, let's keep the read-only parts working via loadGroups.
-
-  // We need to expose the same interface
   const getGroup = (groupId) => {
     return groups.find((group) => group.id === groupId);
   };
 
   const updateGroup = async (groupId, updates) => {
     try {
-      if (user?.id === 'guest') return; // TODO: Guest logic
+      if (user?.id === 'guest') return;
       await client.put(`/groups/${groupId}`, updates);
       await loadGroups();
     } catch (error) {
@@ -267,17 +244,15 @@ export const GroupProvider = ({ children }) => {
     }
   };
 
-  // TODO: Implement updateExpenseInGroup and deleteExpenseFromGroup with backend
   const updateExpenseInGroup = async (groupId, expenseId, updates) => {
     try {
       if (user?.id === 'guest') return;
 
-      // Map updates to backend structure if needed
       const payload = {
         ...updates,
         description: updates.title || updates.description,
         splitType: updates.splitType || (updates.splitMode === 'unequal' ? 'unequal' : 'equal'),
-        shares: updates.shares || updates.splits, // Handle different naming conventions
+        shares: updates.shares || updates.splits,
         receiptUri: updates.receiptUri || updates.receiptUrl
       };
 

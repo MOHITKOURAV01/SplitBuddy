@@ -39,8 +39,6 @@ const GroupSchema = new mongoose.Schema(
                 ref: "Expense",
             },
         ],
-        // Balances can be computed on the fly, but caching them here might be useful for quick access
-        // For now, we'll compute them to ensure accuracy, or store a snapshot
         isSettled: {
             type: Boolean,
             default: false,

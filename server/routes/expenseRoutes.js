@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router({ mergeParams: true }); // Merge params to access groupId
+const router = express.Router({ mergeParams: true });
 const {
     addExpense,
     getExpenses,

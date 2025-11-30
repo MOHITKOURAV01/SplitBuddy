@@ -7,9 +7,6 @@ const {
     calculateSettlements,
 } = require("../utils/balanceCalculator");
 
-// @desc    Get group balances and suggested settlements
-// @route   GET /api/groups/:groupId/balances
-// @access  Private
 const getBalances = async (req, res) => {
     const { groupId } = req.params;
     const group = await Group.findById(groupId).populate("members.user", "name");
@@ -26,9 +23,6 @@ const getBalances = async (req, res) => {
     res.json({ balances, settlements });
 };
 
-// @desc    Request a settlement (create a payment record)
-// @route   POST /api/groups/:groupId/settlements
-// @access  Private
 const createSettlement = async (req, res) => {
     const { toUserId, amount } = req.body;
     const { groupId } = req.params;
@@ -41,7 +35,6 @@ const createSettlement = async (req, res) => {
         status: "requested",
     });
 
-    // Notify payee
     await Notification.create({
         toUser: toUserId,
         fromUser: req.user.id,
@@ -54,9 +47,6 @@ const createSettlement = async (req, res) => {
     res.status(201).json(settlement);
 };
 
-// @desc    Mark settlement as paid
-// @route   POST /api/settlements/:id/pay
-// @access  Private
 const markAsPaid = async (req, res) => {
     const settlement = await Settlement.findById(req.params.id);
 
@@ -73,7 +63,6 @@ const markAsPaid = async (req, res) => {
     settlement.markedAt = Date.now();
     await settlement.save();
 
-    // Notify payee
     await Notification.create({
         toUser: settlement.toUser,
         fromUser: req.user.id,
@@ -86,9 +75,6 @@ const markAsPaid = async (req, res) => {
     res.json(settlement);
 };
 
-// @desc    Approve settlement (Confirm receipt)
-// @route   POST /api/settlements/:id/approve
-// @access  Private
 const approveSettlement = async (req, res) => {
     const settlement = await Settlement.findById(req.params.id);
 
@@ -105,7 +91,6 @@ const approveSettlement = async (req, res) => {
     settlement.approvedAt = Date.now();
     await settlement.save();
 
-    // Create a payment expense to reflect in balances
     await Expense.create({
         group: settlement.group,
         description: "Settlement Payment",
@@ -117,7 +102,6 @@ const approveSettlement = async (req, res) => {
         isPayment: true,
     });
 
-    // Notify payer
     await Notification.create({
         toUser: settlement.fromUser,
         fromUser: req.user.id,
@@ -127,7 +111,6 @@ const approveSettlement = async (req, res) => {
         relatedModel: "Settlement",
     });
 
-    // Emit socket event
     const io = req.app.get("io");
     io.to(settlement.group.toString()).emit("settlement_approved", settlement);
 

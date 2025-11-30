@@ -1,28 +1,16 @@
-/**
- * Settlement Calculation Utilities
- * Calculates who owes whom and suggests minimal payment transfers
- */
-
-/**
- * Calculate net balance for each member
- * @param {Array} expenses - Array of expense objects
- * @param {Array} members - Array of member objects
- * @returns {Object} - Map of memberId to net balance (positive = receives, negative = owes)
- */
 const calculateBalances = (expenses, members) => {
     const balances = {};
 
-    // Initialize balances
     members.forEach((member) => {
-        balances[member.user.toString()] = 0; // Use user ID as key
+        balances[member.user.toString()] = 0;
     });
 
-    // Calculate balances from expenses
+
     expenses.forEach((expense) => {
         const { amount, payer, shares, splitType } = expense;
         const payerId = payer.toString();
 
-        // Payer paid the full amount
+
         if (balances[payerId] !== undefined) {
             balances[payerId] += parseFloat(amount);
         }
@@ -36,8 +24,7 @@ const calculateBalances = (expenses, members) => {
                 }
             });
         } else {
-            // Equal split
-            // Assuming shares contains all involved members for equal split too
+
             const shareAmount = parseFloat(amount) / shares.length;
             shares.forEach((share) => {
                 const memberId = share.user.toString();
@@ -51,30 +38,21 @@ const calculateBalances = (expenses, members) => {
     return balances;
 };
 
-/**
- * Calculate minimal settlement transfers
- * Uses greedy algorithm to minimize number of transactions
- * @param {Object} balances - Map of memberId to balance
- * @returns {Array} - Array of {from, to, amount} transfers
- */
 const calculateSettlements = (balances) => {
     const settlements = [];
 
-    // Create arrays of debtors and creditors
+
     const debtors = [];
     const creditors = [];
 
     Object.entries(balances).forEach(([memberId, balance]) => {
         if (balance < -0.01) {
-            // Owes money
             debtors.push({ memberId, amount: Math.abs(balance) });
         } else if (balance > 0.01) {
-            // Should receive money
             creditors.push({ memberId, amount: balance });
         }
     });
 
-    // Sort by amount (descending) for greedy approach
     debtors.sort((a, b) => b.amount - a.amount);
     creditors.sort((a, b) => b.amount - a.amount);
 

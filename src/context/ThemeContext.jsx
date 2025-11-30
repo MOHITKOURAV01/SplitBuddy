@@ -18,15 +18,13 @@ const THEME_STORAGE_KEY = "@splitbuddy_theme";
 
 export const ThemeProvider = ({ children }) => {
     const systemColorScheme = useColorScheme();
-    const [themeMode, setThemeMode] = useState("system"); // 'light', 'dark', 'system'
+    const [themeMode, setThemeMode] = useState("system");
     const [isDark, setIsDark] = useState(systemColorScheme === "dark");
 
-    // Load saved theme preference
     useEffect(() => {
         loadThemePreference();
     }, []);
 
-    // Update theme when system theme changes
     useEffect(() => {
         if (themeMode === "system") {
             setIsDark(systemColorScheme === "dark");

@@ -108,18 +108,12 @@ export default function GroupDetailsScreen({ navigation, route }) {
 
   const handleInviteMember = async (user) => {
     try {
-      // In a real app, we'd call the API:
-      // await client.post(`/groups/${groupId}/invite`, { email: user.email });
-      // For now, since we are mixing local/backend, we'll simulate the invite by adding them locally
-      // but using their real name from the search result.
-
-      // Check if already in group
       if (group.members.some((m) => m.name === user.name)) {
         Alert.alert("Already here", `${user.name} is already in the squad.`);
         return;
       }
 
-      const member = addMember(groupId, user.name); // Using local context for now to keep UI working
+      const member = addMember(groupId, user.name);
       if (member) {
         setSearchQuery("");
         setSearchResults([]);

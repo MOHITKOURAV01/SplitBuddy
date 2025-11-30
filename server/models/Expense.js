@@ -33,10 +33,10 @@ const ExpenseSchema = new mongoose.Schema(
                     ref: "User",
                 },
                 amount: {
-                    type: Number, // For unequal/shares
+                    type: Number,
                 },
                 percent: {
-                    type: Number, // For percent
+                    type: Number,
                 },
             },
         ],
@@ -48,7 +48,7 @@ const ExpenseSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ["pending", "approved", "disputed"],
-            default: "approved", // Auto-approve for now to match current flow
+            default: "approved",
         },
         receiptUri: {
             type: String,

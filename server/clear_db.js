@@ -12,7 +12,6 @@ const clearData = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log("Connected to MongoDB...");
 
-        // Clear all data
         await User.deleteMany({});
         await Group.deleteMany({});
         await Expense.deleteMany({});

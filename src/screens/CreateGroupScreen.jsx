@@ -41,7 +41,11 @@ export default function CreateGroupScreen({ navigation }) {
           const { data } = await client.get(`/auth/search?q=${searchQuery}`);
           setSearchResults(data);
         } catch (error) {
-          console.error("Search failed", error);
+          if (error.response && error.response.status === 401) {
+            console.log("Search failed due to 401 (token expired), ignoring...");
+          } else {
+            console.error("Search failed", error);
+          }
         } finally {
           setIsSearching(false);
         }
