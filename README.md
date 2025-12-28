@@ -4,6 +4,8 @@
 SplitBuddy is a simple, offline‑friendly app that helps friends fairly split shared expenses for trips, parties, and group activities. It focuses on quick entry, clear settlements, and zero‑friction usage (no sign‑up or login for members).
 
 ---
+# Demo_Video_Of_App
+https://drive.google.com/file/d/19kevxFwEun7sER4YOMhImfAbyp45-f9Q/view
 
 ## 🎯 Key Features
 
