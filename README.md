@@ -7,7 +7,7 @@ SplitBuddy is a simple, offline‑friendly app that helps friends fairly split s
 # Demo_Video_Of_App
 https://drive.google.com/file/d/19kevxFwEun7sER4YOMhImfAbyp45-f9Q/view
 
-## 🎯 Key Features
+##  Key Features
 
 - Create multiple trips/groups (e.g., “Goa Trip 2025”, “Flat Rent”, “Birthday Party”).
 - Add members by name only – no email, phone, or login required.
@@ -18,7 +18,7 @@ https://drive.google.com/file/d/19kevxFwEun7sER4YOMhImfAbyp45-f9Q/view
 
 ---
 
-## 🧩 Use Case / Client Brief
+##  Use Case / Client Brief
 
 A small group of friends regularly go on trips and host parties. Every time, different people pay for cabs, food, hotel, tickets, etc., and at the end they struggle with:
 
@@ -30,7 +30,7 @@ SplitBuddy solves this by acting as a shared ledger for a trip: one person can m
 
 ---
 
-## 📁 Core Concepts
+##  Core Concepts
 
 ### Trips / Groups
 
@@ -110,7 +110,7 @@ This keeps the number of payments as low as possible while fully settling the tr
 
 ---
 
-## ✅ “Settle Trip” & Archiving
+##  “Settle Trip” & Archiving
 
 When everyone has paid/received according to the suggested transfers:
 
@@ -122,7 +122,7 @@ When everyone has paid/received according to the suggested transfers:
 
 ---
 
-## 📝 Activity Log
+##  Activity Log
 
 Every trip has a chronological **Activity Log**, for example:
 
@@ -134,7 +134,7 @@ This improves transparency and avoids confusion, as everyone can see *what chang
 
 ---
 
-## 🧪 Example Flow
+##  Example Flow
 
 1. Create a new trip: **“Goa Trip 2025”**.  
 2. Add members: **Rahul**, **Aditi**, **Neha**, **Rohit**.  
@@ -149,7 +149,7 @@ This improves transparency and avoids confusion, as everyone can see *what chang
 
 ---
 
-## 🛠️ Technical Overview (for developers)
+##  Technical Overview (for developers)
 
 - **Frontend**: Any stack (e.g., React / Flutter / Android Native) – focus on offline‑friendly UI.
 - **Core entities**: Trip, Member, Expense, Settlement, ActivityLog.
@@ -162,7 +162,7 @@ This improves transparency and avoids confusion, as everyone can see *what chang
 
 ---
 
-## 📚 Project Goals
+##  Project Goals
 
 - Remove friction from splitting group expenses.
 - Provide clear, transparent and trustable calculations.
@@ -171,6 +171,6 @@ This improves transparency and avoids confusion, as everyone can see *what chang
 
 ---
 
-## 🚀 Getting Started (Template)
+##  Getting Started (Template)
 
 You can later fill these sections according to your tech stack:
